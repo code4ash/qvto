@@ -37,9 +37,9 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.URIUtil;
-import org.eclipse.emf.common.util.BasicMonitor;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EPackage.Registry;
@@ -691,7 +691,7 @@ public class TestQvtUnparser extends TestCase {
 	    UnitProxy unit = resolver.resolveUnit(folder.getName());
 	    assert unit != null;
 
-		CompiledUnit[] compiledUnits = new CompiledUnit[] { compiler.compile(unit, options, new BasicMonitor()) };
+		CompiledUnit[] compiledUnits = new CompiledUnit[] { compiler.compile(unit, options, new NullProgressMonitor()) };
 		
 		saveCompiledUnitsAsCompiledXMI(compiler, compiledUnits);
 		saveCompiledUnitsAsStandardXMI(compiler, compiledUnits);

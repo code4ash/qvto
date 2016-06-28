@@ -15,10 +15,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import lpg.runtime.IPrsStream;
-import lpg.runtime.IToken;
-import lpg.runtime.PrsStream;
-
 import org.eclipse.emf.ecore.EClassifier;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.m2m.internal.qvt.oml.ast.env.QvtOperationalEnv;
@@ -40,6 +36,10 @@ import org.eclipse.ocl.cst.OCLExpressionCS;
 import org.eclipse.ocl.expressions.OCLExpression;
 import org.eclipse.ocl.parser.OCLLexer;
 import org.eclipse.ocl.utilities.PredefinedType;
+
+import lpg.runtime.IPrsStream;
+import lpg.runtime.IToken;
+import lpg.runtime.PrsStream;
 
 /**
  * @author aigdalov
@@ -239,7 +239,7 @@ public class LightweightParserUtil {
             options.setReportErrors(false);
             options.setShowAnnotations(false);
             options.setSourceLineNumbersEnabled(false);
-            QvtOperationalVisitorCS visitor = new QvtOperationalVisitorCS(oclLexer, data.getEnvironment(), options);
+            QvtOperationalVisitorCS visitor = new QvtOperationalVisitorCS(oclLexer, options);
 
 			return visitor.analyzeExpressionCS(oclExpressionCS, data.getEnvironment());
         }

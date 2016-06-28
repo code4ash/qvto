@@ -17,10 +17,7 @@ import java.io.StringReader;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import lpg.runtime.IPrsStream;
-import lpg.runtime.IToken;
-
-import org.eclipse.emf.common.util.Monitor;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.m2m.internal.qvt.oml.ast.env.QvtOperationalEnv;
@@ -44,6 +41,9 @@ import org.eclipse.ocl.OCLInput;
 import org.eclipse.ocl.ParserException;
 import org.eclipse.ocl.cst.CSTNode;
 import org.eclipse.ocl.lpg.AbstractLexer;
+
+import lpg.runtime.IPrsStream;
+import lpg.runtime.IToken;
 
 /**
  * @author aigdalov
@@ -115,7 +115,7 @@ public class QvtCompletionCompiler extends QVTOCompiler {
     }
     
     @Override
-    protected QvtOperationalVisitorCS createAnalyzer(AbstractQVTParser parser, QvtCompilerOptions options, Monitor monitor) {
+    protected QvtOperationalVisitorCS createAnalyzer(AbstractQVTParser parser, QvtCompilerOptions options, IProgressMonitor monitor) {
 		return new QvtCompletionVisitorCS(parser, options, monitor) {
 			@Override
 			protected void setEnv(QvtOperationalEnv env) {			

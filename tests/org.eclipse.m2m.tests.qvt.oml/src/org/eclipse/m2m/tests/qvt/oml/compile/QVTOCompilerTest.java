@@ -13,9 +13,8 @@ package org.eclipse.m2m.tests.qvt.oml.compile;
 import java.io.BufferedReader;
 import java.util.Collections;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.emf.common.util.BasicMonitor;
-import org.eclipse.emf.common.util.Monitor;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
@@ -34,7 +33,7 @@ import junit.framework.TestCase;
  */
 public class QVTOCompilerTest extends TestCase {
 
-	private static final Monitor NULL_MONITOR = BasicMonitor.toMonitor(new NullProgressMonitor());
+	private static final IProgressMonitor NULL_MONITOR = new NullProgressMonitor();
 
 	URIUnitResolver fResolver;
 

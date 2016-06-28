@@ -169,7 +169,7 @@ public class ConditionChecker {
             options.setShowAnnotations(false);
             options.setSourceLineNumbersEnabled(false);
             try {
-	            QvtOperationalVisitorCS visitor = new QvtOperationalVisitorCS(oclLexer, env, options);            
+	            QvtOperationalVisitorCS visitor = new QvtOperationalVisitorCS(oclLexer, options);            
 	            ast = visitor.analyzeExpressionCS(conditionCS, env);
 	            if(ast == null) { // || ast.getType() != env.getOCLStandardLibrary().getBoolean()) {
 	            	//env.reportError("Boolean type condition required", conditionCS);

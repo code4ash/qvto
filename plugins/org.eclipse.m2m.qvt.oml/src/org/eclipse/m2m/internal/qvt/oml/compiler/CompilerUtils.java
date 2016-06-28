@@ -17,12 +17,9 @@ import java.util.List;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.emf.common.EMFPlugin;
 import org.eclipse.emf.common.util.BasicDiagnostic;
-import org.eclipse.emf.common.util.BasicMonitor;
 import org.eclipse.emf.common.util.Diagnostic;
-import org.eclipse.emf.common.util.Monitor;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.impl.EPackageRegistryImpl;
@@ -78,15 +75,7 @@ public class CompilerUtils {
 		BasicDiagnostic unitDiagnostic = new BasicDiagnostic(uri.toString(), 0, children, mainMessage, null);
 		return unitDiagnostic;
 	}
-	
-	public static Monitor createMonitor(Monitor monitor, int ticks) {
-		if (EMFPlugin.IS_ECLIPSE_RUNNING) {
-			return Eclipse.createMonitor(monitor, ticks);			
-		}
 		
-		return monitor;
-	}
-	
 	public static void throwOperationCanceled() throws RuntimeException {
 		if(EMFPlugin.IS_ECLIPSE_RUNNING) {
 			Eclipse.throwOperationCanceled();
@@ -94,11 +83,7 @@ public class CompilerUtils {
 			throw new RuntimeException("Operation canceled"); //$NON-NLS-1$
 		}
 	}
-	
-	public static Monitor createNullMonitor() {
-		return new BasicMonitor();
-	}
-	
+		
     static EPackage.Registry getEPackageRegistry(URI uri, IMetamodelRegistryProvider metamodelRegistryProvider) {
     	MetamodelRegistry metamodelRegistry = metamodelRegistryProvider.getRegistry(
     			MetamodelRegistryProvider.createContext(uri));
@@ -161,11 +146,7 @@ public class CompilerUtils {
         static QVTOCompiler createCompiler() {
         	return new QVTOCompiler(new WorkspaceMetamodelRegistryProvider(createResourceSet()));
         }    	
-
-    	static Monitor createMonitor(Monitor monitor, int ticks) {
-			return new BasicMonitor.EclipseSubProgress(BasicMonitor.toIProgressMonitor(monitor), ticks, SubProgressMonitor.PREPEND_MAIN_LABEL_TO_SUBTASK);
-    	}
-    	
+        
     	static void throwOperationCanceled() throws RuntimeException {
     		throw new OperationCanceledException();
     	}

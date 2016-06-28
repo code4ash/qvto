@@ -20,6 +20,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.ILaunchConfigurationWorkingCopy;
@@ -206,7 +207,7 @@ public class QvtLauncherTab extends MdaLaunchTab {
         	if(unit == null) {
         		return;
         	}
-            CompiledUnit compiledUnit = QvtEngine.getInstance(file).compileUnit(unit, null);
+            CompiledUnit compiledUnit = QvtEngine.getInstance(file).compileUnit(unit, new NullProgressMonitor());
             if(compiledUnit != null && compiledUnit.getModules().size() >= 1) {
 	            Module module = compiledUnit.getModules().get(0);
 	            ImperativeOperation mainOperation = QvtOperationalParserUtil.getMainOperation(module);

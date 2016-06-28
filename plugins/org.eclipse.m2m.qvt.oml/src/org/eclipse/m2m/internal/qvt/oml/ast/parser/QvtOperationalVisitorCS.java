@@ -30,11 +30,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.emf.common.util.BasicEMap;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.EMap;
-import org.eclipse.emf.common.util.Monitor;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EAnnotation;
 import org.eclipse.emf.ecore.EAttribute;
@@ -134,7 +136,6 @@ import org.eclipse.m2m.internal.qvt.oml.cst.TypeSpecCS;
 import org.eclipse.m2m.internal.qvt.oml.cst.UnitCS;
 import org.eclipse.m2m.internal.qvt.oml.cst.VariableInitializationCS;
 import org.eclipse.m2m.internal.qvt.oml.cst.WhileExpCS;
-import org.eclipse.m2m.internal.qvt.oml.cst.parser.AbstractQVTParser;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.EmfUtil;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.MetamodelRegistry;
 import org.eclipse.m2m.internal.qvt.oml.expressions.Constructor;
@@ -238,6 +239,7 @@ import org.eclipse.ocl.expressions.TypeExp;
 import org.eclipse.ocl.expressions.Variable;
 import org.eclipse.ocl.expressions.VariableExp;
 import org.eclipse.ocl.parser.AbstractOCLAnalyzer;
+import org.eclipse.ocl.parser.AbstractOCLParser;
 import org.eclipse.ocl.parser.OCLLexer;
 import org.eclipse.ocl.parser.OCLParser;
 import org.eclipse.ocl.types.CollectionType;
@@ -268,21 +270,17 @@ public class QvtOperationalVisitorCS
 	 */
     private List<ResolveExp> myLateResolveExps;
     
-    private final Monitor myMonitor;
+    private final IProgressMonitor myMonitor;
     
-	public QvtOperationalVisitorCS(
-			OCLLexer lexStream,
-			Environment<EPackage, EClassifier, EOperation, EStructuralFeature, EEnumLiteral, EParameter, EObject, CallOperationAction, SendSignalAction, Constraint, EClass, EObject> environment, QvtCompilerOptions options) {
-		super(new OCLParser(lexStream));
-        myCompilerOptions = options;
-        myMonitor = CompilerUtils.createNullMonitor();
+	public QvtOperationalVisitorCS(OCLLexer lexStream, QvtCompilerOptions options) {
+		this(new OCLParser(lexStream), options);
 	}
 	
-	public QvtOperationalVisitorCS(AbstractQVTParser parser, QvtCompilerOptions options) {
-		this(parser, options, CompilerUtils.createNullMonitor());
+	public QvtOperationalVisitorCS(AbstractOCLParser parser, QvtCompilerOptions options) {
+		this(parser, options, new NullProgressMonitor());
 	}
 	
-	public QvtOperationalVisitorCS(AbstractQVTParser parser, QvtCompilerOptions options, Monitor monitor) {
+	public QvtOperationalVisitorCS(AbstractOCLParser parser, QvtCompilerOptions options, IProgressMonitor monitor) {
 		super(parser);		
 		myCompilerOptions = options;
 		myMonitor = monitor;
@@ -740,7 +738,7 @@ public class QvtOperationalVisitorCS
 	        EEnumLiteral, EParameter, EObject, CallOperationAction, SendSignalAction,
 	        Constraint, EClass, EObject> env) {
 		
-		if (isAborted()) {
+		if (myMonitor != null && myMonitor.isCanceled()) {
 			CompilerUtils.throwOperationCanceled();
 		}
 		
@@ -2025,66 +2023,88 @@ public class QvtOperationalVisitorCS
 		
        
     public List<QvtOperationalModuleEnv> visitUnitCS(UnitCS unitCS, UnitProxy unit, QvtOperationalFileEnv fileEnv, ExternalUnitElementsProvider importResolver, ResourceSet resSet) throws SemanticException {
-    	List<QvtOperationalModuleEnv> moduleEnvs = new LinkedList<QvtOperationalModuleEnv>();
-    	Map<MappingModuleCS, QvtOperationalModuleEnv> moduleEnvsMap = new HashMap<MappingModuleCS, QvtOperationalModuleEnv>(2);
-    	Set<String> moduleNames = new HashSet<String>(unitCS.getModules().size());
-    	// 1st pass: module headers
-		for(MappingModuleCS moduleCS : unitCS.getModules()) {
-	        Module module = QvtOperationalParserUtil.createModule(moduleCS);
-			QvtOperationalModuleEnv moduleEnv = fileEnv.getFactory().createModuleEnvironment(module, fileEnv);
-			moduleEnvsMap.put(moduleCS, moduleEnv);
-			moduleEnvs.add(moduleEnv);			
-			moduleEnv.setContextModule(module);
-			visitModuleHeaders(moduleCS, importResolver.getImporter(), moduleEnv, importResolver, resSet);
-			
-			if (moduleNames.contains(module.getName())) {
-				moduleEnv.reportError(NLS.bind(ValidationMessages.QvtOperationalVisitorCS_transformationNameDuplicates,
-						new Object[] { module.getName() }),
-						moduleCS.getHeaderCS() == null ? moduleCS : moduleCS.getHeaderCS().getPathNameCS());
+    	try {
+	    	SubMonitor subMonitor = SubMonitor.convert(myMonitor, "Visit " + unit.getQualifiedName(), 6 * unitCS.getModules().size());
+	    	
+	    	List<QvtOperationalModuleEnv> moduleEnvs = new LinkedList<QvtOperationalModuleEnv>();
+	    	Map<MappingModuleCS, QvtOperationalModuleEnv> moduleEnvsMap = new HashMap<MappingModuleCS, QvtOperationalModuleEnv>(2);
+	    	Set<String> moduleNames = new HashSet<String>(unitCS.getModules().size());
+	    		    	
+	    	// 1st pass: module headers
+			subMonitor.subTask("Visit headers");
+	    	for(MappingModuleCS moduleCS : unitCS.getModules()) {
+		        Module module = QvtOperationalParserUtil.createModule(moduleCS);
+				QvtOperationalModuleEnv moduleEnv = fileEnv.getFactory().createModuleEnvironment(module, fileEnv);
+				moduleEnvsMap.put(moduleCS, moduleEnv);
+				moduleEnvs.add(moduleEnv);			
+				moduleEnv.setContextModule(module);
+				visitModuleHeaders(moduleCS, importResolver.getImporter(), moduleEnv, importResolver, resSet);
 				
+				if (moduleNames.contains(module.getName())) {
+					moduleEnv.reportError(NLS.bind(ValidationMessages.QvtOperationalVisitorCS_transformationNameDuplicates,
+							new Object[] { module.getName() }),
+							moduleCS.getHeaderCS() == null ? moduleCS : moduleCS.getHeaderCS().getPathNameCS());
+					
+				}
+				moduleNames.add(module.getName());
+				subMonitor.worked(1);
 			}
-			moduleNames.add(module.getName());
-		}		
-		
-		// 2nd pass: imports and usages 
-		for(MappingModuleCS moduleCS : unitCS.getModules()) {
-			Module module = (Module) moduleCS.getAst();
-			importsCS(moduleCS, unit, module, moduleEnvsMap.get(moduleCS), importResolver);
-		}
-		List<MappingModuleCS> sortedModuless = checkModuleLoops(unitCS, fileEnv);
-		
-		// 2nd pass: intermediate Classes, module tags & renamings
-		for(MappingModuleCS moduleCS : sortedModuless) {
-			Module module = (Module) moduleCS.getAst();
-			QvtOperationalModuleEnv moduleEnv = moduleEnvsMap.get(moduleCS);
-			visitIntermediateClassesCS(moduleEnv, moduleCS, module);
-			for (TagCS tagCS : moduleCS.getTags()) {
-				visitTagCS(moduleEnv, tagCS, module, moduleEnv.getModuleContextType());
+			
+			// 2nd pass: imports and usages
+			subMonitor.subTask("Visit imports");
+			for(MappingModuleCS moduleCS : unitCS.getModules()) {
+				Module module = (Module) moduleCS.getAst();
+				importsCS(moduleCS, unit, module, moduleEnvsMap.get(moduleCS), importResolver);
+				subMonitor.worked(1);
 			}
-			for (RenameCS renameCS : moduleCS.getRenamings()) {
-				legacyRenameCS(renameCS, moduleEnv);
+			List<MappingModuleCS> sortedModuless = checkModuleLoops(unitCS, fileEnv);
+			
+			// 3nd pass: intermediate Classes, module tags & renamings
+			subMonitor.subTask("Visit intermediate classes, tags and renamings");
+			for(MappingModuleCS moduleCS : sortedModuless) {
+				Module module = (Module) moduleCS.getAst();
+				QvtOperationalModuleEnv moduleEnv = moduleEnvsMap.get(moduleCS);
+				visitIntermediateClassesCS(moduleEnv, moduleCS, module);
+				for (TagCS tagCS : moduleCS.getTags()) {
+					visitTagCS(moduleEnv, tagCS, module, moduleEnv.getModuleContextType());
+				}
+				for (RenameCS renameCS : moduleCS.getRenamings()) {
+					legacyRenameCS(renameCS, moduleEnv);
+				};
+				subMonitor.worked(1);
+			};
+			
+			// 4th pass: method headers
+			subMonitor.subTask("Visit operation headers");
+			HashMap<MappingModuleCS, HashMap<MappingMethodCS, ImperativeOperation>> methodMaps = new HashMap<MappingModuleCS, HashMap<MappingMethodCS, ImperativeOperation>>(); 
+			for(MappingModuleCS moduleCS : sortedModuless) {
+				HashMap<MappingMethodCS, ImperativeOperation> methodMap = visitMethodHeaders(moduleCS, moduleEnvsMap.get(moduleCS));
+				methodMaps.put(moduleCS, methodMap);
+				subMonitor.worked(1);
 			}
-		}
-		
-		// 3th pass: method headers
-		HashMap<MappingModuleCS, HashMap<MappingMethodCS, ImperativeOperation>> methodMaps = new HashMap<MappingModuleCS, HashMap<MappingMethodCS, ImperativeOperation>>(); 
-		for(MappingModuleCS moduleCS : sortedModuless) {
-			HashMap<MappingMethodCS, ImperativeOperation> methodMap = visitMethodHeaders(moduleCS, moduleEnvsMap.get(moduleCS));
-			methodMaps.put(moduleCS, methodMap);
-		}
-
-		// 4rd pass: properties
-		for(MappingModuleCS moduleCS : sortedModuless) {
-			Module module = (Module) moduleCS.getAst();
-			createModuleProperties(module, moduleCS, moduleEnvsMap.get(moduleCS));
-		}
-		
-		// 5th pass: method bodies
-		for(MappingModuleCS moduleCS : sortedModuless) {
-			visitMethodBodies(moduleCS, methodMaps.get(moduleCS), moduleEnvsMap.get(moduleCS));
-		}
-		
-		return moduleEnvs;
+	
+			// 5rd pass: properties
+			subMonitor.subTask("Visit properties");
+			for(MappingModuleCS moduleCS : sortedModuless) {
+				Module module = (Module) moduleCS.getAst();
+				createModuleProperties(module, moduleCS, moduleEnvsMap.get(moduleCS));
+				subMonitor.worked(1);
+			}
+			
+			// 6th pass: method bodies
+			subMonitor.subTask("Visit operation bodies");
+			for(MappingModuleCS moduleCS : sortedModuless) {
+				visitMethodBodies(moduleCS, methodMaps.get(moduleCS), moduleEnvsMap.get(moduleCS));
+				subMonitor.worked(1);
+			}
+			
+			return moduleEnvs;
+    	}
+    	finally {
+    		if (myMonitor != null) {
+    			myMonitor.done();
+    		}
+    	}
     }
     
     
@@ -5961,10 +5981,5 @@ public class QvtOperationalVisitorCS
 			return env.getModuleContextType().eResource().getURI();
 		}
 		return null;
-	}
-	
-	private boolean isAborted() {
-		return myMonitor.isCanceled();
-	}
-	
+	}	
 }

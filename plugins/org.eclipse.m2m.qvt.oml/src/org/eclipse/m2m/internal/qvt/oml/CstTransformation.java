@@ -17,7 +17,6 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.common.util.BasicDiagnostic;
-import org.eclipse.emf.common.util.BasicMonitor;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.common.util.URI;
@@ -75,7 +74,7 @@ public class CstTransformation implements Transformation {
 		}
 		
 		QVTOCompiler compiler = getCompiler();
-		return compiler.compile(proxy, null, BasicMonitor.toMonitor(monitor));		
+		return compiler.compile(proxy, null, monitor);		
 	}
 	
 	private QVTOCompiler getCompiler() {

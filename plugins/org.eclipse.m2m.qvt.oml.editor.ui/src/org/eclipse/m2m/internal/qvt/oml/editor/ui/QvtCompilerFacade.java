@@ -21,8 +21,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.emf.common.util.BasicMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.m2m.internal.qvt.oml.QvtPlugin;
@@ -49,24 +48,22 @@ public class QvtCompilerFacade {
 	
 	private QvtCompilerFacade() {}
 	
-	public CompiledUnit compile(final ITextEditor editor, final IDocument document, 
-			QvtCompilerOptions options, IProgressMonitor monitor) {
-		if (!checkEditor(editor)) {
-			return null;
-		}
-		
-        if (monitor == null) {
-            monitor = new NullProgressMonitor();
-        }
-        monitor.beginTask(Messages.QvtCompilerFacade_compilingDoc, 4);
-        CompiledUnit result = null;
+	public CompiledUnit compile(final ITextEditor editor, final IDocument document, QvtCompilerOptions options, IProgressMonitor monitor) {
 		
 		try {
-			monitor.subTask(Messages.QvtCompilerFacade_acquiringDoc);
+			if (!checkEditor(editor)) {
+				return null;
+			}
+					
+			SubMonitor subMonitor = SubMonitor.convert(monitor, Messages.QvtCompilerFacade_compilingDoc, 10);
+			
+	        CompiledUnit result = null;
+		
+			subMonitor.subTask(Messages.QvtCompilerFacade_acquiringDoc);
 			IFile file = ((FileEditorInput) editor.getEditorInput()).getFile();
 			QvtDocumentProvider documentProvider = (QvtDocumentProvider) editor.getDocumentProvider();
 			
-			monitor.worked(1);
+			subMonitor.worked(1);
 
 			String contents = document.get();			
 			try {
@@ -76,7 +73,7 @@ public class QvtCompilerFacade {
 					UnitProxy inMemoryUnit = new InMemoryUnitProxy(unit.getNamespace(), unit.getName(), unit.getURI(), contents, unitResolver);
 					
 					QVTOCompiler compiler = CompilerUtils.createCompiler();				
-	                result = compiler.compile(inMemoryUnit, options, CompilerUtils.createMonitor(BasicMonitor.toMonitor(monitor), 3));
+	                result = compiler.compile(inMemoryUnit, options, subMonitor.newChild(9, SubMonitor.SUPPRESS_NONE));
 				}                
             } catch (MdaException e) {
                 Activator.log(e);
@@ -87,11 +84,14 @@ public class QvtCompilerFacade {
             if (options.isReportErrors() && options.isShowAnnotations()) {
             	//reportProblems(result, editor.getAnnotationModel());
             }
+            
+            return result;
+            
         } finally {
-            monitor.done();
+        	if (monitor != null) {
+        		monitor.done();
+        	}
         }
-		
-        return result;
 	}	
 	
 	public static QvtCompilerFacade getInstance() {

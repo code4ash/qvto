@@ -15,6 +15,7 @@ import java.util.Arrays;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.m2m.internal.qvt.oml.ast.parser.QvtOperationalAstWalker;
 import org.eclipse.m2m.internal.qvt.oml.common.MdaException;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
@@ -54,7 +55,7 @@ public class TestQvtWalker extends TestTransformation {
                 assertNotNull("source unit must be resolved:" + transformation, srcUnit); //$NON-NLS-1$
                 
                 QvtEngine engine = QvtEngine.getInstance(transformation);
-                CompiledUnit unit = engine.compileUnit(srcUnit, null);
+                CompiledUnit unit = engine.compileUnit(srcUnit, new NullProgressMonitor());
                 if(unit.getErrors().size() > 0) {
                     throw new MdaException("Failed to parse " + transformation + ": " + unit.getErrors()); //$NON-NLS-1$ //$NON-NLS-2$
                 }

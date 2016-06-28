@@ -15,7 +15,6 @@ package org.eclipse.m2m.internal.qvt.oml.runtime.project;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.emf.common.util.BasicMonitor;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.m2m.internal.qvt.oml.common.MdaException;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
@@ -59,8 +58,7 @@ public class QvtCompilerFacade {
 			}			
 
 			final QVTOCompiler compiler = CompilerUtils.createCompiler();
-			final CompiledUnit module = compiler.compile(sourceUnit, compilerOptions, 
-					BasicMonitor.toMonitor(monitor));
+			final CompiledUnit module = compiler.compile(sourceUnit, compilerOptions, monitor);
 			
 			return new CompilationResult() {
 				public CompiledUnit getCompiledModule() {

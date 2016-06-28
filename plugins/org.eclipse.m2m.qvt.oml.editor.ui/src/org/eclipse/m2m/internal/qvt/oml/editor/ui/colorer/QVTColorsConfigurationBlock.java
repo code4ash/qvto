@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.emf.common.util.BasicMonitor;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.URIConverter;
 import org.eclipse.jface.dialogs.Dialog;
@@ -602,7 +601,7 @@ class QVTColorsConfigurationBlock {
 		try {			
 			// TODO - log error on compilation errors
 			QVTOCompiler compiler = new QVTOCompiler(new MetamodelRegistryProvider());
-			final CompiledUnit compiledPreviewUnit = compiler.compile(findUnit, new QvtCompilerOptions(), new BasicMonitor());
+			final CompiledUnit compiledPreviewUnit = compiler.compile(findUnit, new QvtCompilerOptions(), new NullProgressMonitor());
 			
 			final SemanticHighlightingManager semanticHighlightingManager = new SemanticHighlightingManager() {
 				@Override
