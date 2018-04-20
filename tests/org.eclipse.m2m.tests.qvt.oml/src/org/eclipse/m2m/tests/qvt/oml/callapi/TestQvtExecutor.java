@@ -69,7 +69,8 @@ public class TestQvtExecutor extends TransformationExecutorTest {
 	public void runTest() throws Throwable {
 		super.runTest();
 		
-		ResourceSet checkingRs = CompilerUtils.cloneResourceSet(uriCreator.getTransformationUri(), resSet);
+		ResourceSet checkingRs = CompilerUtils.cloneResourceSet(resSet);
+		CompilerUtils.addMappingsToResourceSet(checkingRs, uriCreator.getTransformationUri());
 		
 		int outIndex = 0;
 		for (int i = 0; i < paramKinds.size(); ++i) {

@@ -20,6 +20,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EValidator;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompilerUtils;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.EmfUtil;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.ModelContent;
@@ -107,7 +108,8 @@ public class TraceEditorPart extends EditorPart implements IGotoMarker {
 	
     private Trace initTrace(IFile file) throws PartInitException {
     	URI uri = URI.createPlatformResourceURI(file.getFullPath().toString(), true);
-    	ResourceSet mappingAwareRS = CompilerUtils.cloneResourceSet(uri, null);
+    	ResourceSet mappingAwareRS = CompiledUnit.createResourceSet();
+    	CompilerUtils.addMappingsToResourceSet(mappingAwareRS, uri);
     	
     	ModelContent traceModel = EmfUtil.loadModel(uri, mappingAwareRS);
         EObject traceObj = (traceModel != null && !traceModel.getContent().isEmpty() ? traceModel.getContent().get(0) : null);

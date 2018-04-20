@@ -89,19 +89,10 @@ public class CompilerUtils {
 		return resourceSet;
     }
     
-    public static ResourceSet cloneResourceSet(URI context, ResourceSet parentRs) {
+    public static ResourceSet cloneResourceSet(ResourceSet parentRs) {
 		ResourceSetImpl resSet = (ResourceSetImpl) createResourceSet();
 		
-		EPackage.Registry packageRegistry = null;
-		
-		IResource contextResource = URIUtils.getResource(context);
-		if (contextResource != null) {
-			packageRegistry = MetamodelURIMappingHelper.mappingsToEPackageRegistry(contextResource.getProject(), parentRs);
-		}
-
-		if (packageRegistry == null && parentRs != null) {
-			packageRegistry = parentRs.getPackageRegistry();
-		}
+		EPackage.Registry packageRegistry = parentRs.getPackageRegistry();
 
 		if (packageRegistry != null) {
 			resSet.setPackageRegistry(packageRegistry);
@@ -114,6 +105,16 @@ public class CompilerUtils {
 		
 		return resSet;
     }
+    
+    public static void addMappingsToResourceSet(ResourceSet resourceSet, URI context) {
+    	IResource contextResource = URIUtils.getResource(context);
+		if (contextResource != null) {
+			EPackage.Registry packageRegistry = MetamodelURIMappingHelper.mappingsToEPackageRegistry(contextResource.getProject(), resourceSet);
+			if (packageRegistry != null) {
+				resourceSet.setPackageRegistry(packageRegistry);
+			}
+		}
+	}
     
     public static QVTOCompiler createCompiler() {
     	// FIXME - eliminate eclipse dependency here, the call should be responsible
