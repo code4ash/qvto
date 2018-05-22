@@ -52,7 +52,7 @@ public class TransformationUtil {
     }
     
 	public static QvtModule getQvtModule(final URI uriTransf) throws MdaException {
-		return getQvtModule(uriTransf, null);
+		return getQvtModule(uriTransf, /*null*/ EPackage.Registry.INSTANCE);
 	}
 	
 	public static QvtModule getQvtModule(final URI uriTransf, EPackage.Registry packageRegistry) throws MdaException {

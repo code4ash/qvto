@@ -26,6 +26,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EPackage.Registry;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
@@ -91,13 +92,13 @@ public class DebugExecutorTest extends TestCase {
         copyModelData();
         myData.prepare(myProject);
 		
-		resSet = getMetamodelResolutionRS();
+		resSet = new ResourceSetImpl(); // XXX getMetamodelResolutionRS();
 		paramKinds = getParamKinds();
 
 		factory = new TransformationRunnerFactory() {
 			@Override
 			protected TransformationRunner createRunner(URI transformationURI, Registry packageRegistry, List<URI> modelParamURIs) {
-				return super.createRunner(transformationURI, resSet.getPackageRegistry(), modelParamURIs);
+				return super.createRunner(transformationURI, /*resSet.getPackageRegistry()*/ EPackage.Registry.INSTANCE, modelParamURIs);
 			}
 		};
 		
@@ -187,8 +188,8 @@ public class DebugExecutorTest extends TestCase {
 	}
 	
     private List<DirectionKind> getParamKinds() {
-		InternalTransformationExecutor executor = new InternalTransformationExecutor(getTransformationUri(),
-				resSet.getPackageRegistry());
+		InternalTransformationExecutor executor = new InternalTransformationExecutor(getTransformationUri()//,
+				); // XXX resSet.getPackageRegistry());
 
 		Diagnostic loadDiagnostic = executor.loadTransformation(new NullProgressMonitor());
 		if (!EmfUtilPlugin.isSuccess(loadDiagnostic)) {

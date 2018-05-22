@@ -27,7 +27,7 @@ import org.eclipse.jface.text.BadLocationException;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.ITextViewer;
 import org.eclipse.m2m.internal.qvt.oml.ast.env.QvtOperationalEnv;
-import org.eclipse.m2m.internal.qvt.oml.compiler.MetamodelRegistryProvider;
+import org.eclipse.m2m.internal.qvt.oml.compiler.CompilerUtils;
 import org.eclipse.m2m.internal.qvt.oml.compiler.UnitProxy;
 import org.eclipse.m2m.internal.qvt.oml.compiler.WorkspaceMetamodelRegistryProvider;
 import org.eclipse.m2m.internal.qvt.oml.cst.MappingMethodCS;
@@ -104,7 +104,7 @@ public class QvtCompletionData {
     }
     
     public MetamodelRegistry getMetamodelRegistry() {
-    	return myMetamodelProvider.getRegistry(MetamodelRegistryProvider.createContext(myCFile.getURI()));
+    	return myMetamodelProvider.getRegistry(CompilerUtils.createContext(myCFile.getURI()));
     }
 
     public ITextViewer getViewer() {

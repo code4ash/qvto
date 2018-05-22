@@ -132,10 +132,12 @@ public abstract class ModelTestData {
     
     public EPackage.Registry getMetamodelResolutionRegistry(IProject project, ResourceSet resSet) {
     	EPackage.Registry packageRegistry = null;
+    	  	
     	if(!ecoreFileMetamodels.isEmpty()) {
     		packageRegistry = MetamodelURIMappingHelper.mappingsToEPackageRegistry(project, resSet);
     		TestCase.assertNotNull("EPackage registry for workspace ecore file must be ready", packageRegistry); //$NON-NLS-1$			
     	}
+    	    	
     	return packageRegistry;
     }
     

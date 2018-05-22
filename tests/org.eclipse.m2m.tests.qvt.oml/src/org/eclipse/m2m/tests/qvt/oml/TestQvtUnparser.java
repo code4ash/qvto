@@ -49,7 +49,6 @@ import org.eclipse.m2m.internal.qvt.oml.QvtMessage;
 import org.eclipse.m2m.internal.qvt.oml.common.MDAConstants;
 import org.eclipse.m2m.internal.qvt.oml.common.io.FileUtil;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
-import org.eclipse.m2m.internal.qvt.oml.compiler.CompilerUtils;
 import org.eclipse.m2m.internal.qvt.oml.compiler.ExeXMISerializer;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QVTOCompiler;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QvtCompilerOptions;
@@ -682,7 +681,7 @@ public class TestQvtUnparser extends TestCase {
 		final String topName = folder.getName() + MDAConstants.QVTO_FILE_EXTENSION_WITH_DOT;
 		getFile(folder, topName);
 		WorkspaceUnitResolver resolver = new WorkspaceUnitResolver(Collections.singletonList(getIFolder(folder)));
-		QVTOCompiler compiler = CompilerUtils.createCompiler();
+		QVTOCompiler compiler = new QVTOCompiler();
 		
 	    QvtCompilerOptions options = new QvtCompilerOptions();
 	    options.setGenerateCompletionData(false);

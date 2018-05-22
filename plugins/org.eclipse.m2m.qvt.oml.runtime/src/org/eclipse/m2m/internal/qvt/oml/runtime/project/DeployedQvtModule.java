@@ -18,7 +18,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.m2m.internal.qvt.oml.common.MdaException;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompilerMessages;
-import org.eclipse.m2m.internal.qvt.oml.compiler.MetamodelRegistryProvider;
+import org.eclipse.m2m.internal.qvt.oml.compiler.EmfStandaloneMetamodelRegistryProvider;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QVTOCompiler;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QvtCompilerOptions;
 import org.eclipse.m2m.internal.qvt.oml.compiler.UnitProxy;
@@ -47,9 +47,9 @@ public class DeployedQvtModule extends QvtModule {
 	
 	protected IMetamodelRegistryProvider creatMetamodelRegistryProvider() {
 		if (packageRegistry != null) {
-			return QVTOCompiler.createStandaloneMetamodelRegistryProvider(packageRegistry);
+			return new EmfStandaloneMetamodelRegistryProvider(packageRegistry);
 		}
-		return new MetamodelRegistryProvider();
+		return new EmfStandaloneMetamodelRegistryProvider();
 	}
 	
     @Override

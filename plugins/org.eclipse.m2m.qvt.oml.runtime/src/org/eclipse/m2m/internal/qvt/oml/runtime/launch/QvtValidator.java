@@ -59,7 +59,7 @@ public class QvtValidator {
             		transformation.getModuleName()));
         }
         
-		ResourceSet validationRS = CompilerUtils.cloneResourceSet(transformation.getResourceSet());
+		ResourceSet validationRS = CompilerUtils.cloneRegistrations(transformation.getResourceSet());
 		CompilerUtils.addMappingsToResourceSet(validationRS, transformation.getURI());
 		
         Iterator<TargetUriData> itrTargetData = targetUris.iterator();

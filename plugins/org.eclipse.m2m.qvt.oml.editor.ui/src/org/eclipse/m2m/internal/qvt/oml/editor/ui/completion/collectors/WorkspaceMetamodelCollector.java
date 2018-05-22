@@ -11,17 +11,11 @@
 package org.eclipse.m2m.internal.qvt.oml.editor.ui.completion.collectors;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-
-import lpg.runtime.IToken;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceProxy;
-import org.eclipse.core.resources.IResourceProxyVisitor;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -29,8 +23,6 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.contentassist.ICompletionProposal;
 import org.eclipse.m2m.internal.qvt.oml.editor.ui.Activator;
@@ -38,7 +30,8 @@ import org.eclipse.m2m.internal.qvt.oml.editor.ui.completion.CategoryImageConsta
 import org.eclipse.m2m.internal.qvt.oml.editor.ui.completion.CompletionProposalUtil;
 import org.eclipse.m2m.internal.qvt.oml.editor.ui.completion.QvtCompletionData;
 import org.eclipse.m2m.internal.qvt.oml.editor.ui.completion.QvtCompletionProposal;
-import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.MetamodelRegistry;
+import org.eclipse.m2m.internal.qvt.oml.emf.util.EmfUtil;
+import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelDesc;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.WorkspaceMetamodelProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.urimap.MModelURIMapFactory;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.urimap.MModelURIMapPackage;
@@ -48,16 +41,19 @@ import org.eclipse.m2m.internal.qvt.oml.emf.util.urimap.URIMapping;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.graphics.Image;
 
+import lpg.runtime.IToken;
+
 /**
  * @author Aleksandr Igdalov
  * Created on Jul 4, 2007
  */
 
 public class WorkspaceMetamodelCollector extends AbstractMetamodelCollector {
+		
 	public void addPropoposals(Collection<ICompletionProposal> proposals, QvtCompletionData data) {
-		List<IPath> workspaceMetamodels = collectWorkspaceMetamodels();
-		for (IPath workspaceMetamodel : workspaceMetamodels) {
-			QvtCompletionProposal proposal = createCompletionProposal(workspaceMetamodel, data);
+		IMetamodelDesc[] workspaceMetamodels = new WorkspaceMetamodelProvider().getMetamodels();
+		for (IMetamodelDesc workspaceMetamodel : workspaceMetamodels) {
+			QvtCompletionProposal proposal = createCompletionProposal(Path.fromPortableString(workspaceMetamodel.getId()), data);
 			proposals.add(proposal);
 		}
 		
@@ -90,30 +86,10 @@ public class WorkspaceMetamodelCollector extends AbstractMetamodelCollector {
 					}
         };
     }
-    
-    private static List<IPath> collectWorkspaceMetamodels() {
-    	final List<IPath> result = new ArrayList<IPath>();
-    
-    	try {
-			ResourcesPlugin.getWorkspace().getRoot().accept(new IResourceProxyVisitor() {
-				public boolean visit(IResourceProxy proxy) throws CoreException {
-					if(proxy.getType() == IResource.FILE && MetamodelRegistry.isMetamodelFileName(proxy.getName())) {
-						result.add(proxy.requestFullPath());
-					}
-					return true;
-				}
-			}, IResource.NONE);
-		} catch (CoreException e) {
-			Activator.log(e);
-		}
-		
-		return result;
-    }
-    
+       
 	private static EPackage loadPackage(URI uri) {
-		ResourceSet rs = new ResourceSetImpl();
-		Resource res = rs.getResource(uri, true);
-		return WorkspaceMetamodelProvider.getFirstEPackageContent(res);
+		Resource res = EmfUtil.loadResource(uri);
+		return EmfUtil.getFirstEPackageContent(res);
 	}
 	
 	private static void addToSettings(QvtCompletionData data, URI resURI, EPackage pack) {

@@ -48,7 +48,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.m2m.internal.qvt.oml.common.MdaException;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
-import org.eclipse.m2m.internal.qvt.oml.compiler.MetamodelRegistryProvider;
+import org.eclipse.m2m.internal.qvt.oml.compiler.EmfStandaloneMetamodelRegistryProvider;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QVTOCompiler;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QvtCompilerOptions;
 import org.eclipse.m2m.internal.qvt.oml.compiler.UnitProxy;
@@ -600,7 +600,7 @@ class QVTColorsConfigurationBlock {
 		assert findUnit != null;
 		try {			
 			// TODO - log error on compilation errors
-			QVTOCompiler compiler = new QVTOCompiler(new MetamodelRegistryProvider());
+			QVTOCompiler compiler = new QVTOCompiler(new EmfStandaloneMetamodelRegistryProvider());
 			final CompiledUnit compiledPreviewUnit = compiler.compile(findUnit, new QvtCompilerOptions(), null);
 			
 			final SemanticHighlightingManager semanticHighlightingManager = new SemanticHighlightingManager() {

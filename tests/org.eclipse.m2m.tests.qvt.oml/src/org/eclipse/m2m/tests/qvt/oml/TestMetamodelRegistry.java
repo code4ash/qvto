@@ -25,14 +25,12 @@ import org.eclipse.emf.ecore.EcorePackage;
 import org.eclipse.emf.ecore.impl.EPackageRegistryImpl;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.m2m.internal.qvt.oml.compiler.MetamodelRegistryProvider;
+import org.eclipse.m2m.internal.qvt.oml.compiler.CompilerUtils;
 import org.eclipse.m2m.internal.qvt.oml.compiler.WorkspaceMetamodelRegistryProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.EmfException;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.EmfUtilPlugin;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.URIUtils;
-import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.EmfStandaloneMetamodelProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelDesc;
-import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelRegistryProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.MetamodelRegistry;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.urimap.MModelURIMapFactory;
@@ -96,7 +94,7 @@ public class TestMetamodelRegistry extends TestCase {
 	private IMetamodelRegistryProvider.IRepositoryContext createContext() {
 		IFile projectDescFile = myProject.getProject().getFile(".project");
         URI projectDescURI = URIUtils.getResourceURI(projectDescFile);
-		IMetamodelRegistryProvider.IRepositoryContext ctx = MetamodelRegistryProvider.createContext(projectDescURI);
+		IMetamodelRegistryProvider.IRepositoryContext ctx = CompilerUtils.createContext(projectDescURI);
 		return ctx;
 	}
 	
@@ -162,8 +160,8 @@ public class TestMetamodelRegistry extends TestCase {
 		delegateRegistry.put(ID, myEPackage);
 		EPackage.Registry packageRegistry = new EPackageRegistryImpl(delegateRegistry);
 						
-		IMetamodelProvider provider = new EmfStandaloneMetamodelProvider(packageRegistry);
-		MetamodelRegistry metaRegistry = new MetamodelRegistry(provider);
+//		IMetamodelProvider provider = new EmfStandaloneMetamodelProvider(packageRegistry);
+		MetamodelRegistry metaRegistry = new MetamodelRegistry(packageRegistry);
 				
 		EPackage result = metaRegistry.toEPackageRegistry().getEPackage(ID);
 		assertSame(myEPackage, result);
@@ -179,7 +177,7 @@ public class TestMetamodelRegistry extends TestCase {
 		EPackage.Registry packageRegistry = new EPackageRegistryImpl();
 		packageRegistry.put(ID, p1);
 		
-		MetamodelRegistry registry = new MetamodelRegistry(new EmfStandaloneMetamodelProvider(packageRegistry));
+		MetamodelRegistry registry = new MetamodelRegistry(packageRegistry);
 		
 		IMetamodelDesc desc = registry.getMetamodelDesc(ID);
 		assertSame(p1, desc.getModel());
@@ -210,7 +208,7 @@ public class TestMetamodelRegistry extends TestCase {
 		EPackage.Registry packageRegistry = new EPackageRegistryImpl();
 		packageRegistry.put(ID, descriptor);
 		
-		MetamodelRegistry registry = new MetamodelRegistry(new EmfStandaloneMetamodelProvider(packageRegistry));
+		MetamodelRegistry registry = new MetamodelRegistry(packageRegistry);
 		
 		IMetamodelDesc desc = registry.getMetamodelDesc(ID);
 				

@@ -45,10 +45,11 @@ public abstract class DelegatingMetamodelProvider implements IMetamodelProvider 
 		
 		if (desc == null || !EmfUtilPlugin.isSuccess(desc.getLoadStatus())) {
 			IMetamodelDesc delegateDesc = delegate.getMetamodel(id);
-		
+			
 			if (desc == null || (delegateDesc != null && EmfUtilPlugin.isSuccess(delegateDesc.getLoadStatus()))) {
 				desc = delegateDesc;
 			}
+			
 		}
 		
 		return desc;
@@ -74,6 +75,7 @@ public abstract class DelegatingMetamodelProvider implements IMetamodelProvider 
 		EPackage.Registry registry = new EPackageRegistryImpl(delegate.getPackageRegistry());
 		
 		for(IMetamodelDesc desc : getLocalMetamodels()) {
+			
 			if (EmfUtilPlugin.isSuccess(desc.getLoadStatus())) {
 				registry.put(desc.getId(), desc.getModel());
 			}

@@ -12,6 +12,7 @@
 package org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry;
 
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.resource.ResourceSet;
 
 /**
  * Provides context specific metamodel registry.
@@ -42,4 +43,6 @@ public interface IMetamodelRegistryProvider {
 	 * @return the metamodel registry, never <code>null</code>
 	 */
 	MetamodelRegistry getRegistry(IRepositoryContext context);
+	
+	ResourceSet getResolutionResourceSet();
 }

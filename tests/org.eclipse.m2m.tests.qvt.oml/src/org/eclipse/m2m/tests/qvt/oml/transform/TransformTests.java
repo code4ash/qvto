@@ -580,7 +580,7 @@ public class TransformTests extends TestCase {
         		new FilesToFilesData("bug475910"), //$NON-NLS-1$ 
         		new FilesToFilesData("bug484020"), //$NON-NLS-1$ 
         		new FilesToFilesData("bug490998"), //$NON-NLS-1$ 
-        		new FilesToFilesData("bug492966"), //$NON-NLS-1$ 
+        		new FilesToFilesData("bug492966"), //$NON-NLS-1$
         	};
     }
 

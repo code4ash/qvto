@@ -14,8 +14,6 @@ package org.eclipse.m2m.internal.qvt.oml.compiler;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,8 +21,8 @@ import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EPackage;
-import org.eclipse.emf.ecore.EPackage.Registry;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.ecore.xmi.XMIResource;
 import org.eclipse.emf.ecore.xmi.XMLHelper;
 import org.eclipse.emf.ecore.xmi.XMLLoad;
@@ -288,10 +286,14 @@ public class ExeXMIResource extends XMIResourceImpl implements Resource {
 		public String getHREF(EObject obj) {
 			Resource objResource = obj.eResource();
 			if (objResource != null && this.resource != objResource) {
-				URI savedURI = getPackage2HREFMap().get(objResource.getURI());
-				if (savedURI != null) {
-					URI href = savedURI.appendFragment(objResource.getURIFragment(obj));
-					return href.toString();
+				EObject root = EcoreUtil.getRootContainer(obj);
+				if (root instanceof EPackage) {
+					String ns = ((EPackage) root).getNsURI();
+					if (ns != null) {
+						URI savedURI = URI.createURI(ns);
+						URI href = savedURI.appendFragment(objResource.getURIFragment(obj));
+						return href.toString();
+					}
 				}
 			}
 
@@ -314,11 +316,7 @@ public class ExeXMIResource extends XMIResourceImpl implements Resource {
 	private static final String LINE_BREAKS_ELEMENT = "lineBreaks"; //$NON-NLS-1$	
 	
 	private static final String SOURCE_URI_ELEMENT = "sourceURI"; //$NON-NLS-1$
-		
-	// instance fields
-
-	private Map<URI, URI> fPackage2HREF;
-
+	
 	
 	public ExeXMIResource(URI uri) {
 		super(uri);
@@ -371,46 +369,6 @@ public class ExeXMIResource extends XMIResourceImpl implements Resource {
 	public void doLoad(InputStream inputStream, Map<?, ?> options) throws IOException {
 		super.doLoad(inputStream, options);
 		ExecutableXMIHelper.fixResourceOnLoad(this);
-	}
-
-	private Map<URI, URI> getPackage2HREFMap() {
-		if (fPackage2HREF == null) {
-			if (resourceSet != null && resourceSet.getPackageRegistry() != null) {
-				Registry packageRegistry = resourceSet.getPackageRegistry();
-				for (Map.Entry<String, Object> entry : packageRegistry
-						.entrySet()) {
-					Object value = entry.getValue();
-					if (value instanceof EPackage) {
-						EPackage ePackage = (EPackage) value;
-						String nsURI = ePackage.getNsURI();
-						Resource ePackageResource = ePackage.eResource();
-						// be defensive, anyone can put anything into the
-						// package registry
-						if (nsURI != null && ePackageResource != null) {
-							URI packageResourceURI = ePackageResource.getURI();
-							if (packageResourceURI != null
-									&& (packageResourceURI.isPlatform() || packageResourceURI
-											.isFile())) {
-								if (fPackage2HREF == null) {
-									fPackage2HREF = new HashMap<URI, URI>();
-								}
-
-								URI registeredURI = URI.createURI(nsURI, false);
-								fPackage2HREF.put(packageResourceURI,
-										registeredURI);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		if (fPackage2HREF == null) {
-			// mark as already initialized
-			fPackage2HREF = Collections.emptyMap();
-		}
-
-		return fPackage2HREF;
 	}
 	
 	IModuleSourceInfo getSourceInfo() {

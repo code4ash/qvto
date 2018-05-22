@@ -60,7 +60,7 @@ public class QvtOperationalEnvFactory extends EcoreEnvironmentFactory {
 		
 	/* TODO - Do we need a default constructor? */
 	public QvtOperationalEnvFactory() {
-		super(copyPackageRegistry(EPackage.Registry.INSTANCE));
+		super(new EPackageRegistryImpl(EPackage.Registry.INSTANCE));
 	}
 
 	/**
@@ -172,11 +172,5 @@ public class QvtOperationalEnvFactory extends EcoreEnvironmentFactory {
 		}
 		
 		return visitor;
-	}
-	
-	private static EPackage.Registry copyPackageRegistry(EPackage.Registry registry) {
-		EPackageRegistryImpl result = new EPackageRegistryImpl();
-		result.putAll(registry);
-		return result;
 	}
 }

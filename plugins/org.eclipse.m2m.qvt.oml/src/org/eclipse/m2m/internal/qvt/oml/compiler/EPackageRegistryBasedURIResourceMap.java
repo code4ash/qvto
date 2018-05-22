@@ -28,6 +28,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+@Deprecated
 class EPackageRegistryBasedURIResourceMap extends HashMap<URI, Resource> {
 
 	private static final long serialVersionUID = -3716798352459745813L;

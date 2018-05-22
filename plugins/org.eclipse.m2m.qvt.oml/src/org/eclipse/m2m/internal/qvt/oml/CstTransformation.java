@@ -26,7 +26,6 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.m2m.internal.qvt.oml.ast.env.QvtOperationalEnv;
 import org.eclipse.m2m.internal.qvt.oml.common.MdaException;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
-import org.eclipse.m2m.internal.qvt.oml.compiler.CompilerUtils;
 import org.eclipse.m2m.internal.qvt.oml.compiler.ExeXMISerializer;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QVTOCompiler;
 import org.eclipse.m2m.internal.qvt.oml.compiler.UnitProxy;
@@ -48,7 +47,7 @@ public class CstTransformation implements Transformation {
 	private QVTOCompiler fCompiler;
 	
 	public CstTransformation(URI uri) {
-		this(uri, null);
+		this(uri, EPackage.Registry.INSTANCE);
 	}
 	
 	public CstTransformation(URI uri, EPackage.Registry packageRegistry) {
@@ -57,7 +56,7 @@ public class CstTransformation implements Transformation {
 		}
 
 		fURI = uri;
-		fPackageRegistry = packageRegistry;
+		fPackageRegistry = packageRegistry == null ? EPackage.Registry.INSTANCE : packageRegistry;
 	}
 	
 	protected CompiledUnit getCompiledUnit(IProgressMonitor monitor) throws MdaException {			
@@ -87,10 +86,10 @@ public class CstTransformation implements Transformation {
 	
 	protected QVTOCompiler createCompiler() {
 		if(fPackageRegistry == null) {
-			return CompilerUtils.createCompiler();
+			return new QVTOCompiler();
 		}
 		
-		return QVTOCompiler.createCompiler(fPackageRegistry);
+		return new QVTOCompiler(fPackageRegistry);
 	}
 	
 	private void doLoad(IProgressMonitor monitor) {

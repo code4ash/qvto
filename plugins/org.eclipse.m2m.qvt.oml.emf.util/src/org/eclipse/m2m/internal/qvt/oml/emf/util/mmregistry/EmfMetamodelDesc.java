@@ -13,6 +13,7 @@ package org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry;
 
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EFactory;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
@@ -25,7 +26,7 @@ import org.eclipse.osgi.util.NLS;
  */
 public class EmfMetamodelDesc implements IMetamodelDesc {
 	
-    private final String myNsURI;
+    private final String myId;
     
     private final EPackage.Descriptor myPackageDescriptor;
     
@@ -34,12 +35,12 @@ public class EmfMetamodelDesc implements IMetamodelDesc {
     private Diagnostic status = Diagnostic.OK_INSTANCE;
 	
 	
-	public EmfMetamodelDesc(EPackage.Descriptor packageDescriptor, String nsURI) {
+	public EmfMetamodelDesc(EPackage.Descriptor packageDescriptor, String id) {
 		if (packageDescriptor == null) {
 			throw new IllegalArgumentException();
 		}
 		myPackageDescriptor = packageDescriptor;
-		myNsURI = nsURI;
+		myId = id;
 	}
 		
 	public EmfMetamodelDesc(EPackage pack, String nsURI) {
@@ -48,11 +49,11 @@ public class EmfMetamodelDesc implements IMetamodelDesc {
 		}
 		myPackageDescriptor = null;
 		myPackage = pack;
-		myNsURI = nsURI;
+		myId = nsURI;
 	}
 	
 	public String getId() {
-		return myNsURI;
+		return myId;
 	}
 	
     public EPackage getModel() {
@@ -73,6 +74,10 @@ public class EmfMetamodelDesc implements IMetamodelDesc {
     		}
     	}
         return myPackage;
+    }
+        
+    public EFactory getEFactory() {
+    	return getModel() == null ? null : getModel().getEFactoryInstance();
     }
     
     public Diagnostic getLoadStatus() {

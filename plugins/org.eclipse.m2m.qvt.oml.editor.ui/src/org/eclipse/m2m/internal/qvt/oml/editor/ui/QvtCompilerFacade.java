@@ -27,7 +27,6 @@ import org.eclipse.jface.text.IDocument;
 import org.eclipse.m2m.internal.qvt.oml.QvtPlugin;
 import org.eclipse.m2m.internal.qvt.oml.common.MdaException;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
-import org.eclipse.m2m.internal.qvt.oml.compiler.CompilerUtils;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QVTOCompiler;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QvtCompilerOptions;
 import org.eclipse.m2m.internal.qvt.oml.compiler.UnitContents;
@@ -71,7 +70,7 @@ public class QvtCompilerFacade {
 					UnitResolver unitResolver = unit.getResolver();
 					UnitProxy inMemoryUnit = new InMemoryUnitProxy(unit.getNamespace(), unit.getName(), unit.getURI(), contents, unitResolver);
 					
-					QVTOCompiler compiler = CompilerUtils.createCompiler();				
+					QVTOCompiler compiler = new QVTOCompiler();				
 	                result = compiler.compile(inMemoryUnit, options, subMonitor.newChild(9, SubMonitor.SUPPRESS_NONE));
 				}                
             } catch (MdaException e) {

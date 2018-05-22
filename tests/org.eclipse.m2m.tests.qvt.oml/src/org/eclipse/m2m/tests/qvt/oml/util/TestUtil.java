@@ -53,7 +53,6 @@ import org.eclipse.m2m.internal.qvt.oml.common.MdaException;
 import org.eclipse.m2m.internal.qvt.oml.common.io.FileUtil;
 import org.eclipse.m2m.internal.qvt.oml.compiler.BlackboxUnitResolver;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
-import org.eclipse.m2m.internal.qvt.oml.compiler.CompilerUtils;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QVTOCompiler;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QvtCompilerOptions;
 import org.eclipse.m2m.internal.qvt.oml.compiler.UnitProxy;
@@ -149,7 +148,7 @@ public class TestUtil extends Assert {
 	public static Set<CompiledUnit> compileModules(String srcContainer, String[] modulePaths)  {
 		TestModuleResolver testResolver = TestModuleResolver.createTestPluginResolver(srcContainer);
 		
-		QVTOCompiler compiler = CompilerUtils.createCompiler();				
+		QVTOCompiler compiler = new QVTOCompiler();
 		QvtCompilerOptions options = new QvtCompilerOptions();
 		options.setGenerateCompletionData(true);
 		
@@ -181,7 +180,7 @@ public class TestUtil extends Assert {
 	}
 		
 	public static QVTOCompiler createTestPluginQvtCompiler(String sourceContainerPath) {
-		return CompilerUtils.createCompiler();
+		return new QVTOCompiler();
 	}
 	
 	public static void turnOffAutoBuilding() throws CoreException {

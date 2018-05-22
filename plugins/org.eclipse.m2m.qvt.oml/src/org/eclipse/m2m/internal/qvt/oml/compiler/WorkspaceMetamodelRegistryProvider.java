@@ -20,30 +20,54 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.EPackage;
+import org.eclipse.emf.ecore.impl.EPackageRegistryImpl;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.EmfStandaloneMetamodelProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelRegistryProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.MetamodelRegistry;
+import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.ProjectMetamodelProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.urimap.MetamodelURIMappingHelper;
 
 public class WorkspaceMetamodelRegistryProvider implements IMetamodelRegistryProvider {
 
 	private ResourceSet resolutionRSet;
 	private	Map<String, MetamodelRegistry> perProjectRegs;
+	private IMetamodelRegistryProvider delegateProvider;
+	private EPackage.Registry delegateRegistry;
 	
 	public WorkspaceMetamodelRegistryProvider() {
-		this(new ResourceSetImpl());
+		this(EPackage.Registry.INSTANCE);
 	}
 	
+	public WorkspaceMetamodelRegistryProvider(EPackage.Registry registry) {		
+		this(registry, null);
+	}
+		
 	public WorkspaceMetamodelRegistryProvider(ResourceSet resourceSet) {
-		if(resourceSet == null) {
+		this(resourceSet.getPackageRegistry(), resourceSet);
+	}
+	
+	private WorkspaceMetamodelRegistryProvider(final EPackage.Registry registry, ResourceSet resourceSet) {
+		
+		if(registry == null) {
 			throw new IllegalArgumentException();
 		}
 		
-		this.resolutionRSet = resourceSet;
-	}
+		if (resourceSet == null) {
+			resolutionRSet = new ResourceSetImpl();
+			resolutionRSet.setPackageRegistry(new EPackageRegistryImpl(registry));
+		}
+		else {
+			resolutionRSet = resourceSet;
+		}
 		
+		delegateRegistry = registry;
+		delegateProvider = new EmfStandaloneMetamodelRegistryProvider(delegateRegistry);
+	}
+	
 	public ResourceSet getResolutionResourceSet() {
 		return resolutionRSet;
 	}
@@ -55,7 +79,7 @@ public class WorkspaceMetamodelRegistryProvider implements IMetamodelRegistryPro
 		
 		URI uri = context.getURI();
 		if(!uri.isPlatformResource()) {
-			return getDelegateRegistry();
+			return delegateProvider.getRegistry(context);
 		}
 		
 		IPath wsLocation = new Path(uri.toPlatformString(true));		
@@ -75,8 +99,7 @@ public class WorkspaceMetamodelRegistryProvider implements IMetamodelRegistryPro
 				String projectKey = project.getFullPath().toString();
 				MetamodelRegistry reg = perProjectRegs.get(projectKey);
 				if (reg == null) {
-					IMetamodelProvider provider = MetamodelURIMappingHelper.createMetamodelProvider(project,
-							createDelegateMetamodelProvider(), resolutionRSet);
+					IMetamodelProvider provider = new ProjectMetamodelProvider(project, new EmfStandaloneMetamodelProvider(delegateRegistry), resolutionRSet);					
 					reg = new MetamodelRegistry(provider);
 					perProjectRegs.put(projectKey, reg);
 				}
@@ -84,15 +107,7 @@ public class WorkspaceMetamodelRegistryProvider implements IMetamodelRegistryPro
 			}			
 		}
 		
-		return getDelegateRegistry();
+		return delegateProvider.getRegistry(context);
 	}
-	
-	private MetamodelRegistry getDelegateRegistry() {
-		return new MetamodelRegistry(createDelegateMetamodelProvider()); 
-	}
-	
-	protected IMetamodelProvider createDelegateMetamodelProvider() {
-		return MetamodelRegistry.getDefaultMetamodelProvider();
-	}
-	
+		
 }

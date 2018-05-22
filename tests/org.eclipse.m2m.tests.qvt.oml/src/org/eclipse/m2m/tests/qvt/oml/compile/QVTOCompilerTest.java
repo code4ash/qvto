@@ -16,7 +16,6 @@ import java.util.Collections;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QVTOCompiler;
 import org.eclipse.m2m.internal.qvt.oml.compiler.URIUnitResolver;
@@ -58,7 +57,7 @@ public class QVTOCompilerTest extends TestCase {
 		assertNotNull(barUnit);
 		assertContents(barUnit);
 
-		QVTOCompiler compiler = QVTOCompiler.createCompiler(EPackage.Registry.INSTANCE);
+		QVTOCompiler compiler = new QVTOCompiler();
 		try {
 			CompiledUnit foo = compiler.compile(fooUnit, null, NULL_MONITOR);
 			assertNotNull(foo);

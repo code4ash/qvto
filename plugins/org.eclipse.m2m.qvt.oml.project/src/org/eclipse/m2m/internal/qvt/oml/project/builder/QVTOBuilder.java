@@ -205,7 +205,7 @@ public class QVTOBuilder extends IncrementalProjectBuilder {
 			QvtCompilerOptions options = new QvtCompilerOptions();
 			options.setGenerateCompletionData(false);
 						
-	        QVTOCompiler compiler = CompilerUtils.createCompiler();
+	        QVTOCompiler compiler = new QVTOCompiler();
 	        List<UnitProxy> allUnits = UnitResolverFactory.Registry.INSTANCE.findAllUnits(URIUtils.getResourceURI(getProject()));
 	        
 	        subMonitor.worked(1);

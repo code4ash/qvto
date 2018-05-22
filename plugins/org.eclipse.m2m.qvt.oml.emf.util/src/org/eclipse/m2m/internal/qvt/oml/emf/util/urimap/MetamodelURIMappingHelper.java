@@ -31,8 +31,7 @@ import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.EmfUtilPlugin;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.MetamodelRegistry;
-import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.WorkspaceMetamodelProvider;
-import org.eclipse.osgi.util.NLS;
+import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.ProjectMetamodelProvider;
 
 public class MetamodelURIMappingHelper {
 
@@ -159,46 +158,10 @@ public class MetamodelURIMappingHelper {
 			return null;
 		}
 
-		IMetamodelProvider provider = createMetamodelProvider(project, MetamodelRegistry.getDefaultMetamodelProvider(),
+		IMetamodelProvider provider = new ProjectMetamodelProvider(project, MetamodelRegistry.getDefaultMetamodelProvider(),
 				resourceSet);
 
 		return provider.getPackageRegistry();
 	}
-
-	public static IMetamodelProvider createMetamodelProvider(IProject project, IMetamodelProvider delegate,
-			ResourceSet resourceSet) {
-
-		MappingContainer mappings;
-
-		try {
-			mappings = loadMappings(project);
-		} catch (IOException e) {
-			EmfUtilPlugin.log(e);
-			return delegate;
-		}
-
-		WorkspaceMetamodelProvider metamodelProvider = new WorkspaceMetamodelProvider(delegate, resourceSet);
-
-		for (URIMapping nextMapping : mappings.getMapping()) {
-			URI uri = null;
-			IllegalArgumentException error = null;
-			try {
-				uri = URI.createURI(nextMapping.getTargetURI());
-			} catch (IllegalArgumentException e) {
-				error = e;
-			}
-
-			if (uri != null && nextMapping.getSourceURI() != null) {
-				metamodelProvider.addMetamodel(nextMapping.getSourceURI(), uri);
-			} else {
-				String message = NLS.bind("Invalid metamodel uri mapping. nsUri:''{0}'' modelUri:''{1}''", //$NON-NLS-1$
-						nextMapping.getSourceURI(), nextMapping.getTargetURI());
-				EmfUtilPlugin.getDefault().getLog().log(new Status(IStatus.ERROR, EmfUtilPlugin.ID, message, error));
-
-			}
-		}
-
-		return metamodelProvider;
-	}
-
+	
 }

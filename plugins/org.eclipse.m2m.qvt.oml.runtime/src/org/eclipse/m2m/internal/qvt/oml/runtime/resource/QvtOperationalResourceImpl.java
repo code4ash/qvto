@@ -67,7 +67,7 @@ public class QvtOperationalResourceImpl extends XMIResourceImpl {
     		
             try {
             	URI normalizedUri = getURIConverter().normalize(getURI());
-            	EPackage.Registry packageRegistry = getResourceSet() != null ? getResourceSet().getPackageRegistry() : null;
+            	EPackage.Registry packageRegistry = getResourceSet() != null ? getResourceSet().getPackageRegistry() : EPackage.Registry.INSTANCE;
             	QvtModule qvtModule = TransformationUtil.getQvtModule(normalizedUri, packageRegistry);
 
             	QvtCompilerOptions qvtOptions = new QvtCompilerOptions();

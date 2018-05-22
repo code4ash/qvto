@@ -19,14 +19,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceProxy;
-import org.eclipse.core.resources.IResourceProxyVisitor;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EClassifier;
@@ -36,7 +30,6 @@ import org.eclipse.emf.ecore.EOperation;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EParameter;
 import org.eclipse.emf.ecore.ETypedElement;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuListener;
@@ -66,7 +59,9 @@ import org.eclipse.m2m.internal.qvt.oml.common.ui.dialogs.OpenClassifierDialog;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.EmfException;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.EmfUtil;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.EmfUtilPlugin;
+import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.EmfMetamodelDesc;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelDesc;
+import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.MetamodelRegistry;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.WorkspaceMetamodelProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.ui.DelegatingPropertySource;
@@ -98,7 +93,7 @@ import org.eclipse.ui.views.properties.IPropertySourceProvider;
 import org.eclipse.ui.views.properties.PropertySheetPage;
 
 
-public class MetamodelBrowser  implements IAdaptable {
+public class MetamodelBrowser implements IAdaptable {
 	/*
 	 * Browser style constants 
 	 */
@@ -138,7 +133,7 @@ public class MetamodelBrowser  implements IAdaptable {
 	private int browserStyle;
 	private ViewForm control;
 	private IToolBarManager toolBarManager;
-	private BrowserNode workspaceModels;	
+	private BrowserNode workspaceModels;
 	
 	public MetamodelBrowser(Composite parent) {
 		this(parent, DEFAULT);
@@ -509,12 +504,12 @@ public class MetamodelBrowser  implements IAdaptable {
                 		// empty content
                 		EPackage parent = EmfUtil.getRootPackage(pack);
                 		if(parent != pack && !rootNodes.containsKey(parent)) {                 			
-                			rootNodes.put(parent, new DelegatingDesc(parent));
+                			rootNodes.put(parent, new EmfMetamodelDesc(parent, parent.getNsURI()));
                 		}
                 	}
                 }
-            } catch (EmfException ignore) {
-    			CommonPlugin.log(ignore);            	
+            } catch (EmfException e) {
+    			CommonPlugin.log(e);            	
             }	
         }
  
@@ -522,22 +517,18 @@ public class MetamodelBrowser  implements IAdaptable {
         	globalRegistryNode.addChild(new MetamodelNode(rootEntry.getValue(), globalRegistryNode, false));    		
 		}        
         
-        WorkspaceMetamodelProvider ws = new WorkspaceMetamodelProvider(new ResourceSetImpl());
-        List<IResource> wsModels = collectWorkspaceMetamodels();
-                
-        for (IResource res : wsModels) {
-			URI resURI = URI.createPlatformResourceURI(res.getFullPath().toString(), false);
-			IMetamodelDesc wsMModelDesc = ws.addMetamodel(resURI.toString(), resURI);
-			workspaceModels.addChild(new ResourceModelNode(resURI, wsMModelDesc, workspaceModels));			
-		}
-   
+        IMetamodelProvider ws = new WorkspaceMetamodelProvider();
+        for (IMetamodelDesc wsMModelDesc : ws.getMetamodels()) {
+        	workspaceModels.addChild(new ResourceModelNode(URI.createPlatformResourceURI(wsMModelDesc.getId(), true), wsMModelDesc, workspaceModels));			
+        }
+                   
         rootContainer.addChild(globalRegistryNode);
         rootContainer.addChild(workspaceModels);
         return rootContainer;
     }        
     
     /**
-     * Synchronizes the browser contents with the given the workspace changes about ecore files.
+     * Synchronizes the browser contents with the given workspace changes about ecore files.
      * @param wsDelta an object grouping workspace changes related to ecore files.
      */
     void update(WorkspaceMetamodelsDelta wsDelta) {
@@ -791,64 +782,14 @@ public class MetamodelBrowser  implements IAdaptable {
         return myPropertySheetPage;
     }
     
-    private static List<IResource> collectWorkspaceMetamodels() {
-    	final List<IResource> result = new ArrayList<IResource>();
-    
-    	try {
-			ResourcesPlugin.getWorkspace().getRoot().accept(new IResourceProxyVisitor() {
-				public boolean visit(IResourceProxy proxy) throws CoreException {
-					if(proxy.getType() == IResource.FILE && MetamodelRegistry.isMetamodelFileName(proxy.getName())) {
-						result.add(proxy.requestResource());
-					}
-					return true;
-				}
-			}, IResource.NONE);
-		} catch (CoreException e) {
-			CommonPlugin.log(e.getStatus());
-		}
-		
-		return result;
-    }
-    
-    private static class DelegatingDesc implements IMetamodelDesc {
-		
-    	final EPackage ePackage;
-    	
-    	DelegatingDesc(EPackage delegatedPackage) {
-    		assert delegatedPackage != null;
-    		this.ePackage = delegatedPackage;    
-    	}
-    	
-    	public String getId() {
-    		return ePackage.getNsURI();
-		}
-
-		public Diagnostic getLoadStatus() {
-			return Diagnostic.OK_INSTANCE;
-		}
-
-		public EPackage getModel() {
-			return ePackage;
-		}
-
-		public boolean isLoaded() {
-			return true;
-		}
-		
-		@Override
-		public String toString() {
-			return getId();
-		}
-    }
-    
     private void metamodelFileAdded(IPath ecoreFilePath) {
     	if(this.workspaceModels == null) {
     		return;
     	}
     	
 		URI resURI = URI.createPlatformResourceURI(ecoreFilePath.toString(), false);
-		WorkspaceMetamodelProvider ws = new WorkspaceMetamodelProvider(new ResourceSetImpl());
-		IMetamodelDesc modelFileDesc = ws.addMetamodel(resURI.toString(), resURI);
+		IMetamodelProvider ws = new WorkspaceMetamodelProvider();	
+		IMetamodelDesc modelFileDesc = ws.getMetamodel(ecoreFilePath.toPortableString());
 		
 		this.workspaceModels.addChild(new ResourceModelNode(resURI, modelFileDesc, workspaceModels));
     }
@@ -865,8 +806,8 @@ public class MetamodelBrowser  implements IAdaptable {
 		if(resourceModelNode != null) {			
 			URI resourceURI = resourceModelNode.uri;
 			
-			WorkspaceMetamodelProvider ws = new WorkspaceMetamodelProvider(new ResourceSetImpl());			
-			IMetamodelDesc modelFileDesc = ws.addMetamodel(resourceURI.toString(), resourceURI);
+			IMetamodelProvider ws = new WorkspaceMetamodelProvider();			
+			IMetamodelDesc modelFileDesc = ws.getMetamodel(ecoreFilePath.toPortableString());
 			
 			ResourceModelNode newNode = new ResourceModelNode(resourceURI, modelFileDesc, workspaceModels);
 			

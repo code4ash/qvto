@@ -28,8 +28,8 @@ import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.m2m.internal.qvt.oml.NLS;
 import org.eclipse.m2m.internal.qvt.oml.QvtMessage;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.URIUtils;
-import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelProvider;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelRegistryProvider;
+import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.IMetamodelRegistryProvider.IRepositoryContext;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry.MetamodelRegistry;
 import org.eclipse.m2m.internal.qvt.oml.emf.util.urimap.MetamodelURIMappingHelper;
 
@@ -70,8 +70,7 @@ public class CompilerUtils {
 	}
 		
     static EPackage.Registry getEPackageRegistry(URI uri, IMetamodelRegistryProvider metamodelRegistryProvider) {
-    	MetamodelRegistry metamodelRegistry = metamodelRegistryProvider.getRegistry(
-    			MetamodelRegistryProvider.createContext(uri));
+    	MetamodelRegistry metamodelRegistry = metamodelRegistryProvider.getRegistry(createContext(uri));
     	EPackage.Registry packageRegistry;
 
     	if(metamodelRegistry != null) {
@@ -82,15 +81,9 @@ public class CompilerUtils {
 
     	return packageRegistry;
     }
-	
-    static ResourceSet createResourceSet() {
-		ResourceSetImpl resourceSet = new ResourceSetImpl();
-		resourceSet.setURIResourceMap(new EPackageRegistryBasedURIResourceMap(resourceSet.getURIConverter()));
-		return resourceSet;
-    }
-    
-    public static ResourceSet cloneResourceSet(ResourceSet parentRs) {
-		ResourceSetImpl resSet = (ResourceSetImpl) createResourceSet();
+	    
+    public static ResourceSet cloneRegistrations(ResourceSet parentRs) {
+		ResourceSetImpl resSet = new ResourceSetImpl();
 		
 		EPackage.Registry packageRegistry = parentRs.getPackageRegistry();
 
@@ -115,37 +108,24 @@ public class CompilerUtils {
 			}
 		}
 	}
-    
-    public static QVTOCompiler createCompiler() {
-    	// FIXME - eliminate eclipse dependency here, the call should be responsible
-    	// for setting this up, as different domains have different requirements,
-    	// like editor, builders etc.
-    	if(EMFPlugin.IS_ECLIPSE_RUNNING && EMFPlugin.IS_RESOURCES_BUNDLE_AVAILABLE) {
-    		return Eclipse.createCompiler();
-    	}
-    	
-    	return QVTOCompiler.createCompiler(EPackage.Registry.INSTANCE);
-    }
-    
-    static class Eclipse {
-
-        static QVTOCompiler createCompiler() {
-        	return new QVTOCompiler(new WorkspaceMetamodelRegistryProvider(createResourceSet()));
-        }    	
+        
+    static class Eclipse { 	
         
     	static void throwOperationCanceled() throws RuntimeException {
     		throw new OperationCanceledException();
-    	}
-
-		static WorkspaceMetamodelRegistryProvider createMetamodelRegistryProvider(final EPackage.Registry packageRegistry, ResourceSet metamodelResourceSet) {
-			// Solved potential NullPointer issue if called from QVTOCompiler.createCompilerWithHistory(null);
-			return new WorkspaceMetamodelRegistryProvider(null == metamodelResourceSet ? createResourceSet() : metamodelResourceSet) {
-								
-				@Override
-				protected IMetamodelProvider createDelegateMetamodelProvider() {
-					return MetamodelRegistry.getDefaultMetamodelProvider(packageRegistry);
-				}
-			};
-		}     	
+    	}   	
     }
+
+	public static IRepositoryContext createContext(final URI uri) {
+		if (uri == null) {
+			throw new IllegalArgumentException();
+		}
+	
+		return new IRepositoryContext() {
+	
+			public URI getURI() {
+				return uri;
+			}
+		};
+	}
 }

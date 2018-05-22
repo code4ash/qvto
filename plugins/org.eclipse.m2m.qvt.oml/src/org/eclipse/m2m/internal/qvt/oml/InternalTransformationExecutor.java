@@ -40,8 +40,6 @@ import org.eclipse.m2m.internal.qvt.oml.ast.env.QvtOperationalEvaluationEnv;
 import org.eclipse.m2m.internal.qvt.oml.ast.env.QvtOperationalFileEnv;
 import org.eclipse.m2m.internal.qvt.oml.ast.env.QvtOperationalStdLibrary;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
-import org.eclipse.m2m.internal.qvt.oml.compiler.CompilerUtils;
-import org.eclipse.m2m.internal.qvt.oml.compiler.QVTOCompiler;
 import org.eclipse.m2m.internal.qvt.oml.evaluator.InternalEvaluator;
 import org.eclipse.m2m.internal.qvt.oml.evaluator.ModelInstance;
 import org.eclipse.m2m.internal.qvt.oml.evaluator.ModelParameterHelper;
@@ -70,7 +68,6 @@ import org.eclipse.ocl.ecore.SendSignalAction;
  */
 public class InternalTransformationExecutor {
 
-	private EPackage.Registry fPackageRegistry;
 	private ExecutionDiagnostic fLoadDiagnostic;
 	private OperationalTransformation fOperationalTransformation;
 	private QvtOperationalEnvFactory fEnvFactory;	
@@ -89,7 +86,7 @@ public class InternalTransformationExecutor {
 	}
 	
 	public InternalTransformationExecutor(URI uri, EPackage.Registry registry) {
-		this(new CstTransformation(uri, registry), registry);
+		this(new CstTransformation(uri, registry));
 	}
 	
 	public InternalTransformationExecutor(Transformation transformation) {
@@ -99,17 +96,7 @@ public class InternalTransformationExecutor {
 		
 		fTransformation = transformation;
 	}
-		
-	public InternalTransformationExecutor(Transformation transformation, EPackage.Registry registry) {
-		this(transformation);
-		
-		if (registry == null) {
-			throw new IllegalArgumentException("null package registry"); //$NON-NLS-1$
-		}
-		
-		fPackageRegistry = registry;
-	}
-			
+	
 	public URI getURI() {
 		return fTransformation.getURI();
 	}
@@ -380,16 +367,7 @@ public class InternalTransformationExecutor {
 	public String toString() {
 		return "QVTO-Executor: " + fTransformation.getURI(); //$NON-NLS-1$
 	}
-	
-	protected QVTOCompiler createCompiler() {
-		if(fPackageRegistry == null) {
-			return CompilerUtils.createCompiler();
-		}
 		
-		return QVTOCompiler.createCompiler(fPackageRegistry);
-	}
-
-	
 	public static class TracesAwareExecutor extends InternalTransformationExecutor {
 		
 		private Trace fTraces;
@@ -405,7 +383,7 @@ public class InternalTransformationExecutor {
 		public TracesAwareExecutor(Transformation transformation) {
 			super(transformation);
 		}
-			
+					
 		public Trace getTraces() {
 			return fTraces;
 		}

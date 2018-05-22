@@ -16,7 +16,6 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.m2m.internal.qvt.oml.common.MdaException;
 import org.eclipse.m2m.internal.qvt.oml.compiler.CompiledUnit;
-import org.eclipse.m2m.internal.qvt.oml.compiler.CompilerUtils;
 import org.eclipse.m2m.internal.qvt.oml.compiler.QVTOCompiler;
 import org.eclipse.m2m.internal.qvt.oml.compiler.UnitProxy;
 import org.eclipse.m2m.internal.qvt.oml.compiler.UnitResolverFactory;
@@ -127,7 +126,7 @@ public class PlatformPluginUnitResolverTest extends TestCase {
 	
 	private void assertResolvedCompiledUnit(UnitProxy unit) {
 		assertNotNull("Unit must be resolved", unit); //$NON-NLS-1$
-		QVTOCompiler compiler = CompilerUtils.createCompiler();
+		QVTOCompiler compiler = new QVTOCompiler();
 		try {
 			CompiledUnit compiledUnit = compiler.compile(unit, null, null);
 			assertTrue("Unit must not have compilation errors", compiledUnit.getErrors().isEmpty()); //$NON-NLS-1$
