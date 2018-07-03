@@ -108,8 +108,9 @@ public class SampleProjectsCreationOperation implements IRunnableWithProgress {
 				public void run(IProgressMonitor localMonitor) throws CoreException {
 					localMonitor.beginTask(Messages.SampleProjectsCreationOperation_creatingProjects, 4);
 					try {
-						myCreatedProject = importProject(myProject, SubMonitor.convert(localMonitor, 4));
-						myCreatedProject.build(IncrementalProjectBuilder.FULL_BUILD, SubMonitor.convert(localMonitor, 1));
+						SubMonitor subMonitor = SubMonitor.convert(localMonitor, 5);
+						myCreatedProject = importProject(myProject, subMonitor);
+						myCreatedProject.build(IncrementalProjectBuilder.FULL_BUILD, subMonitor);
 					}
 					catch (InterruptedException e) {
 						throw new OperationCanceledException();
@@ -172,7 +173,7 @@ public class SampleProjectsCreationOperation implements IRunnableWithProgress {
 	 * Creates new sample project using specified <code>sampleProject</code>
 	 */
 	private IProject importProject(final SampleProject sampleProject,
-			final IProgressMonitor monitor) throws CoreException,
+			final SubMonitor subMonitor) throws CoreException,
 	InvocationTargetException, InterruptedException {
 		String path = sampleProject.getArchive();
 		IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
@@ -183,7 +184,7 @@ public class SampleProjectsCreationOperation implements IRunnableWithProgress {
 					.queryOverwrite(project.getName());
 			if (IOverwriteQuery.YES.equals(overwrite)
 					|| IOverwriteQuery.ALL.equals(overwrite)) {
-				project.delete(true, true, SubMonitor.convert(monitor, 1));
+				project.delete(true, true, subMonitor);
 				project = root.getProject(sampleProject.getName());
 			} else if (IOverwriteQuery.NO.equals(overwrite)
 					|| IOverwriteQuery.NO_ALL.equals(overwrite)) {
@@ -193,13 +194,13 @@ public class SampleProjectsCreationOperation implements IRunnableWithProgress {
 			}
 		}
 
-		project.create(SubMonitor.convert(monitor, 1));
+		project.create(subMonitor);
 		project.open(new NullProgressMonitor());
 
 		Bundle bundle = Platform.getBundle(sampleProject.getNamespace());
 		ZipFile zipFile = getZipFileFromPluginDir(path, bundle);
-		importFilesFromZip(zipFile, project.getFullPath(), SubMonitor.convert(monitor, 1));
-		createSampleManifest(project, sampleProject, SubMonitor.convert(monitor, 1));
+		importFilesFromZip(zipFile, project.getFullPath(), subMonitor);
+		createSampleManifest(project, sampleProject, subMonitor);
 		IProjectDescription description = project.getDescription();
 
 		String tempName = "temp" + System.currentTimeMillis(); //$NON-NLS-1$
