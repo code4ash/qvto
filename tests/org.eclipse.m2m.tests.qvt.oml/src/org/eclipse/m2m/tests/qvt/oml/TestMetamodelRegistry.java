@@ -159,8 +159,7 @@ public class TestMetamodelRegistry extends TestCase {
 		EPackage.Registry delegateRegistry = new EPackageRegistryImpl();
 		delegateRegistry.put(ID, myEPackage);
 		EPackage.Registry packageRegistry = new EPackageRegistryImpl(delegateRegistry);
-						
-//		IMetamodelProvider provider = new EmfStandaloneMetamodelProvider(packageRegistry);
+		
 		MetamodelRegistry metaRegistry = new MetamodelRegistry(packageRegistry);
 				
 		EPackage result = metaRegistry.toEPackageRegistry().getEPackage(ID);

@@ -50,7 +50,7 @@ public class WorkspaceMetamodelRegistryProvider implements IMetamodelRegistryPro
 		this(resourceSet.getPackageRegistry(), resourceSet);
 	}
 	
-	private WorkspaceMetamodelRegistryProvider(final EPackage.Registry registry, ResourceSet resourceSet) {
+	private WorkspaceMetamodelRegistryProvider(EPackage.Registry registry, ResourceSet resourceSet) {
 		
 		if(registry == null) {
 			throw new IllegalArgumentException();

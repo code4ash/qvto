@@ -13,7 +13,6 @@ package org.eclipse.m2m.internal.qvt.oml.emf.util.mmregistry;
 
 import org.eclipse.emf.common.util.Diagnostic;
 import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.EFactory;
 import org.eclipse.emf.ecore.EPackage;
 import org.eclipse.emf.ecore.EcoreFactory;
 import org.eclipse.emf.ecore.xmi.impl.XMIResourceImpl;
@@ -74,10 +73,6 @@ public class EmfMetamodelDesc implements IMetamodelDesc {
     		}
     	}
         return myPackage;
-    }
-        
-    public EFactory getEFactory() {
-    	return getModel() == null ? null : getModel().getEFactoryInstance();
     }
     
     public Diagnostic getLoadStatus() {

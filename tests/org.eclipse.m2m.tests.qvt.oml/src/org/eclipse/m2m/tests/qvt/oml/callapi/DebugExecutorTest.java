@@ -92,7 +92,7 @@ public class DebugExecutorTest extends TestCase {
         copyModelData();
         myData.prepare(myProject);
 		
-		resSet = new ResourceSetImpl(); // XXX getMetamodelResolutionRS();
+		resSet = getMetamodelResolutionRS();
 		paramKinds = getParamKinds();
 
 		factory = new TransformationRunnerFactory() {
@@ -188,8 +188,7 @@ public class DebugExecutorTest extends TestCase {
 	}
 	
     private List<DirectionKind> getParamKinds() {
-		InternalTransformationExecutor executor = new InternalTransformationExecutor(getTransformationUri()//,
-				); // XXX resSet.getPackageRegistry());
+		InternalTransformationExecutor executor = new InternalTransformationExecutor(getTransformationUri(), resSet.getPackageRegistry());
 
 		Diagnostic loadDiagnostic = executor.loadTransformation(new NullProgressMonitor());
 		if (!EmfUtilPlugin.isSuccess(loadDiagnostic)) {
