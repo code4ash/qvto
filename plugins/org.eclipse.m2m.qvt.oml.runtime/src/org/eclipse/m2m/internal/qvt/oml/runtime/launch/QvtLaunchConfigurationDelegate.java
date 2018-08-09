@@ -16,13 +16,14 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.debug.core.DebugException;
+import org.eclipse.debug.core.DebugEvent;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchConfiguration;
 import org.eclipse.debug.core.IStatusHandler;
+import org.eclipse.emf.common.util.BasicDiagnostic;
 import org.eclipse.m2m.internal.qvt.oml.QvtPlugin;
-import org.eclipse.m2m.internal.qvt.oml.common.launch.ShallowProcess;
+import org.eclipse.m2m.internal.qvt.oml.common.launch.ProcessJob;
 import org.eclipse.m2m.internal.qvt.oml.common.launch.StreamsProxy;
 import org.eclipse.m2m.internal.qvt.oml.evaluator.QvtRuntimeException;
 import org.eclipse.m2m.internal.qvt.oml.runtime.QvtRuntimePlugin;
@@ -39,93 +40,65 @@ public class QvtLaunchConfigurationDelegate extends QvtLaunchConfigurationDelega
 	}
 	
 	// FIXME - do refactoring of this area 
-	public void launch(final ILaunchConfiguration configuration, String mode, final ILaunch launch, final IProgressMonitor monitor) throws CoreException {
+	public void launch(final ILaunchConfiguration configuration, String mode, final ILaunch launch, final IProgressMonitor launchMonitor) throws CoreException {
         
-		try {
-            final QvtTransformation qvtTransformation = new QvtInterpretedTransformation(getQvtModule(configuration));
-                                                
-            final StreamsProxy streamsProxy = new StreamsProxy();
-   
-            ShallowProcess.IRunnable r = new ShallowProcess.IRunnable() {
-                
-                public void run() throws Exception {
-                	try {
-	                    IStatus status = QvtLaunchConfigurationDelegateBase.validate(qvtTransformation, configuration);                    
-	                    if(status.getSeverity() > IStatus.WARNING) {
-	                    	throw new CoreException(status);
-	                    }      	
-	                	
-	                	ExecutionContext context = QvtLaunchUtil.createContext(configuration, new WriterLog(streamsProxy.getOutputWriter()), monitor);
-	                    
-	                	QvtLaunchUtil.doLaunch(qvtTransformation, configuration, context);
-                	}
-                	finally {
-                		qvtTransformation.cleanup();
-                	}
-                }
-            };
-            
-            
-            r = getSafeRunnable(qvtTransformation, r);       
-            final ShallowProcess process = new ShallowProcess(launch, r) {
-            	boolean isTerminated = false;
-            	@Override
-            	public void terminate() throws DebugException {            		
-            		monitor.setCanceled(true);
-            		isTerminated = true;	            		
-            		super.terminate();            		
-            	}
-
-            	@Override
-            	public boolean isTerminated() {            	
-            		return isTerminated || super.isTerminated();
-            	}
-            	
-            	@Override
-            	public boolean canTerminate() {
-            		return !isTerminated();
-            	}
-            };
-            
-            process.setStreamsProxy(streamsProxy);
-            
-            Thread processThread = new Thread(new Runnable() {
-            	public void run() {
-                    try {
-						process.run();
-					} catch (Exception e) {
-						if(e instanceof QvtRuntimeException == false) {
-							// QVT runtime exception are legal QVT transformation level errors
-							
-							IStatusHandler statusHandler = DebugPlugin.getDefault().getStatusHandler(QvtRuntimePlugin.LAUNCH_ERROR_STATUS);
-							if(statusHandler != null) {
-								IStatus actualStatus = new Status(IStatus.ERROR, QvtRuntimePlugin.ID,
-										QvtRuntimePlugin.LAUNCH_ERROR_STATUS.getCode(), e.getMessage(),
-										e.getMessage() == null ? e : null);
-								try {
-									statusHandler.handleStatus(actualStatus, configuration);
-								} catch (CoreException coreExc) {
-									QvtPlugin.getDefault().log(coreExc.getStatus());
-								}
-							}						
-							
-							QvtPlugin.error(Messages.InMemoryQvtLaunchConfigurationDelegate_TransformationJobName, e);							
-						}
-					}
+        final QvtTransformation qvtTransformation = new QvtInterpretedTransformation(getQvtModule(configuration));
+                                            
+        final StreamsProxy streamsProxy = new StreamsProxy();
+        
+        ProcessJob processJob = new ProcessJob(Messages.InMemoryQvtLaunchConfigurationDelegate_TransformationJobName, launch, streamsProxy) {
+			
+			@Override
+			public IStatus runInWorkspace(IProgressMonitor monitor) throws CoreException {					
+				try {
+                    IStatus status = QvtLaunchConfigurationDelegateBase.validate(qvtTransformation, configuration);                    
+                    if(status.getSeverity() > IStatus.WARNING) {
+                    	return status;
+                    }      	
+                	
+                	ExecutionContext context = QvtLaunchUtil.createContext(configuration, new WriterLog(streamsProxy.getOutputWriter()), monitor);
+                    
+                	QvtLaunchUtil.doLaunch(qvtTransformation, configuration, context);
+                	
+                	return Status.OK_STATUS;
+				} 
+				catch (QvtRuntimeException e) {
+					// QVT runtime exception are legal QVT transformation level errors
+					return BasicDiagnostic.toIStatus(e.getDiagnostic());			
+				} 
+				catch (Exception e) {					
+					IStatus actualStatus = new Status(IStatus.ERROR, QvtRuntimePlugin.ID,
+							QvtRuntimePlugin.LAUNCH_ERROR_STATUS.getCode(), e.getMessage(),
+							e.getMessage() == null ? e : null);
 					
-					try {
-						launch.terminate();
-					} catch (DebugException e) {
-						QvtPlugin.getDefault().log(e.getStatus());
-					}
-            	}
-            }, Messages.InMemoryQvtLaunchConfigurationDelegate_TransformationJobName);
-            
-            processThread.start();
-		}
-		catch(Exception e) {
-			throw new CoreException(org.eclipse.m2m.internal.qvt.oml.runtime.util.MiscUtil.makeErrorStatus(e));
-		}
+					IStatusHandler statusHandler = DebugPlugin.getDefault().getStatusHandler(QvtRuntimePlugin.LAUNCH_ERROR_STATUS);
+					
+					if(statusHandler != null) {	
+						try {
+							statusHandler.handleStatus(actualStatus, configuration);
+						} catch (CoreException coreExc) {
+							actualStatus = coreExc.getStatus();
+							QvtPlugin.getDefault().log(actualStatus);
+						}
+					}						
+					
+					QvtPlugin.error(Messages.InMemoryQvtLaunchConfigurationDelegate_TransformationJobName, e);
+					
+					throw new CoreException(actualStatus);
+				}
+				finally {
+					qvtTransformation.cleanup();
+					
+                	if (DebugPlugin.getDefault() != null) {
+                		DebugPlugin.getDefault().fireDebugEventSet(new DebugEvent[] {new DebugEvent(this, DebugEvent.TERMINATE)});
+                	}
+				}
+			}
+		};
+		
+		launch.addProcess(processJob);
+		
+		processJob.schedule();
 	}
     
   
